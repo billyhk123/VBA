@@ -1,0 +1,110 @@
+TEST FILE:
+
+[START]	[Alias_A]	[Alias_B]	[Alias_C]
+	a1	b1	c1
+	a2	b2	c2
+	a3	b3	c3
+[END]			
+
+
+
+
+Sub getAlias(filePath As String, sRow As Integer, sCol As Integer)
+
+' Below are for alias
+Dim alias1 As String, alias2 As String, alias3 As String
+Dim aliasCol1 As Integer, aliasCol2 As Integer, aliasCol13 As Integer
+Dim strCol As Integer, endRow As Integer
+Dim aliasNum As Integer
+Dim rng As Range
+Dim NWB As Workbook, toCombineWB As Workbook, OWB As Workbook
+Set OWB = ActiveWorkbook
+Set OWS = OWB.Worksheets("main")
+
+OWS.Activate
+Cells(sRow, sCol).Select
+Range(Selection, Selection.End(xlToRight)).Select
+Set rng = Selection
+
+Dim colNameArray() As Variant
+colNameArray = rng
+Dim colArray() As Variant ' To store the column num
+colArray = rng
+'get alias column
+
+Set NWB = Workbooks.Open(filePath)
+NWB.Activate
+
+'find start and end row for data range
+For s = 1 To 9999
+    If Cells(s, 1).Value = "[START]" Then
+        strRow = s
+    ElseIf Cells(s, 1).Value = "[END]" Then
+        endRow = s
+        Exit For
+    End If
+Next
+
+'loop to looking for desired alias column in the source file
+'colNum = 1 '2-D array start at 1
+For i = 1 To Application.CountA(colNameArray)
+    For j = 1 To 999
+        If colNameArray(1, i) = Cells(1, j).Value Then
+            colArray(1, i) = j
+'            colNum = colNum + 1
+        Exit For
+        
+        Else
+        colArray(1, i) = 9999 'asign empty ref when not finding the value
+        End If
+    Next
+Next
+
+'look for values under alias, and move the data
+
+LastRow = OWB.Worksheets("main").UsedRange.Rows.Count
+OWB.Worksheets("main").Activate
+
+For i = 1 To Application.CountA(colNameArray)
+cnt = LastRow + 1
+    For j = strRow + 1 To endRow - 1
+        If NWB.Worksheets(1).Cells(j, colArray(1, i)).Value <> "" Then
+       'ookup matching alias and get the value
+            OWB.Worksheets("main").Cells(cnt, sCol + i - 1) = NWB.Worksheets(1).Cells(j, colArray(1, i)).Value
+       
+       'For getting the fixed value
+        OWB.Worksheets("main").Cells(cnt, 1) = NWB.Name                 'Column_1
+        OWB.Worksheets("main").Cells(cnt, 2) = NWB.Worksheets(1).Name   'Column_2
+
+        End If
+        cnt = cnt + 1
+    Next
+Next
+
+NWB.Close SaveChanges:=False
+OWB.Activate
+
+End Sub
+
+Sub main()
+
+Worksheets("paths").Activate
+Set OWS = ActiveSheet
+
+Cells(9999, 1).Select
+Selection.End(xlUp).Select
+Range(Selection, Selection.End(xlUp)).Select
+
+Set rng = Selection
+cnt = Application.CountA(rng)
+
+Worksheets("main").Activate
+For i = 1 To cnt
+    OWS.Activate
+    'MapData Worksheets("paths").Cells(i, 1).Value
+    getAlias Worksheets("paths").Cells(i, 1).Value, 1, 3
+Next
+
+
+End Sub
+
