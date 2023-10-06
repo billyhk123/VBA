@@ -1,0 +1,32 @@
+Sub getFileName()
+    Dim FileSystem As Object
+    Dim HostFolder As String
+    Dim lastCnt As Integer
+    
+    HostFolder = ActiveWorkbook.Path & "\"
+
+    Set FileSystem = CreateObject("Scripting.FileSystemObject")
+    DoFolder FileSystem.GetFolder(HostFolder)
+    
+End Sub
+
+Function DoFolder(Folder)
+    Dim SubFolder
+            
+    Range("H1") = "Folders"
+    Range("J1") = "Files"
+    For Each SubFolder In Folder.SubFolders
+        'Range("H1").End(xlDown).Offset(0, -1).Select = CStr(SubFolder)
+        Range("H99999").End(xlUp).Offset(1, 0).Select
+        Selection = CStr(SubFolder)
+        DoFolder SubFolder
+    Next
+   
+   Dim File
+    For Each File In Folder.Files
+        
+        Range("J99999").End(xlUp).Offset(1, 0).Select
+        Selection = CStr(File)
+        
+    Next
+End Function
