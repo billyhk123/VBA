@@ -1,0 +1,111 @@
+Sub UpdateShapesAndCopyToFiles()
+    Dim mainWorkbook As Workbook
+    Dim mainSheet As Worksheet
+    Dim shapeToUpdate As Shape
+    Dim targetFilePathsRange As Range
+    Dim targetFilePath As String
+    Dim targetWorkbook As Workbook
+    Dim targetWorksheet As Worksheet
+    Dim targetPresentation As Object ' PowerPoint Presentation
+    Dim targetSlide As Object ' PowerPoint Slide
+    Dim copyShape As Object ' PowerPoint Shape
+    Dim pptApp As Object ' PowerPoint.Application
+    Dim i As Integer
+    Dim j As Integer
+    Dim newDate As Date
+    
+    ' Set the main workbook and sheet
+    Set mainWorkbook = ThisWorkbook
+    Set mainSheet = mainWorkbook.Sheets("Sheet1")
+    
+    ' Set the range containing target file paths
+    Set targetFilePathsRange = mainSheet.Range("B2:B" & mainSheet.Cells(mainSheet.Rows.Count, "B").End(xlUp).Row)
+    Set shapeToUpdate = mainSheet.Shapes("Text box 1") ' Assuming the shape is the first one in the sheet
+    
+    ' Create a new instance of PowerPoint
+    Set pptApp = CreateObject("PowerPoint.Application")
+    pptApp.Visible = True ' Set to True if you want PowerPoint to be visible
+    
+    ' Loop through each target file path
+    For i = 1 To targetFilePathsRange.Rows.Count
+        targetFilePath = targetFilePathsRange.Cells(i, 1).Value
+        
+        ' Check if the file path is not empty
+        If targetFilePath <> "" Then
+            ' Determine whether the target file is an Excel or PowerPoint file
+            If InStr(1, targetFilePath, ".xlsx", vbTextCompare) > 0 Then
+                ' Open the target Excel workbook
+                Set targetWorkbook = Workbooks.Open(targetFilePath)
+                
+                ' Loop through each worksheet in the target workbook
+                For j = 1 To targetWorkbook.Sheets.Count
+                    Set targetWorksheet = targetWorkbook.Sheets(j)
+                    
+                    ' Copy the shape from the main sheet to the target worksheet
+                    shapeToUpdate.Copy
+                    targetWorksheet.Cells(3, 14).PasteSpecial ' Paste at cell A1
+                    Set copyShape = targetWorksheet.Shapes(targetWorksheet.Shapes.Count)
+                    
+                    ' Position the copied shape as needed
+                    ' Adjust left, top, width, height properties if necessary
+                    
+                    ' Optionally, update the text in the copied shape
+                    ' copyShape.TextFrame.Characters.Text = mainSheet.Range("A1").Value
+                Next j
+                
+                ' Save and close the target Excel workbook
+                targetWorkbook.Save
+                targetWorkbook.Close
+            ElseIf InStr(1, targetFilePath, ".pptx", vbTextCompare) > 0 Then
+                ' Open the target PowerPoint presentation
+                Set targetPresentation = pptApp.Presentations.Open(targetFilePath)
+                
+                ' Loop through each slide in the target presentation
+                For j = 1 To 1
+                    Set targetSlide = targetPresentation.Slides(j)
+                    'Set copyShape = targetSlide.Shapes(targetSlide.Shapes.Count)
+                    
+                        
+                    ' Copy the shape from the main sheet to the target slide
+                    shapeToUpdate.Copy
+                    targetSlide.Shapes.PasteSpecial ppPasteDefault ' Paste the shape
+                    ' Position the copied shape at the bottom-right corner of the first slide
+                    Set copyShape = targetSlide.Shapes(targetSlide.Shapes.Count)
+                    
+                    If j = 1 Then
+                        Dim slideWidth As Single
+                        Dim slideHeight As Single
+                        Dim shapeWidth As Single
+                        Dim shapeHeight As Single
+                        
+                       
+                        ' Get the slide's dimensions from the Master property
+                        slideWidth = targetSlide.Master.Width
+                        slideHeight = targetSlide.Master.Height
+
+                        ' Get the copied shape's dimensions
+                        shapeWidth = copyShape.Width
+                        shapeHeight = copyShape.Height
+    
+                        ' Position the shape at the bottom-right corner
+                        copyShape.Left = slideWidth - shapeWidth
+                        copyShape.Top = slideHeight - shapeHeight
+                    End If
+                    
+                    ' Optionally, update the text in the copied shape
+                    ' copyShape.TextFrame.TextRange.Text = mainSheet.Range("A1").Value
+                Next j
+                
+                ' Save and close the target PowerPoint presentation
+                targetPresentation.Save
+                targetPresentation.Close
+            End If
+        End If
+    Next i
+    
+    ' Close the PowerPoint application
+    pptApp.Quit
+    Set pptApp = Nothing
+End Sub
+
+
