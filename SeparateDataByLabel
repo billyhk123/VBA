@@ -1,0 +1,49 @@
+
+Sub SeparateDataByLabel()
+    Dim wb As Workbook
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim label As String
+    Dim uniqueLabels As New Collection
+    Dim i As Long, j As Long
+    Dim newWb As Workbook
+    Dim newWs As Worksheet
+    Dim fileName As String
+    
+    Set wb = ActiveWorkbook
+    Set ws = wb.ActiveSheet
+    
+    'Get unique labels
+    lastRow = ws.Cells(Rows.Count, "Q").End(xlUp).Row
+    For i = 7 To lastRow
+        label = ws.Cells(i, "Q").Value
+        On Error Resume Next
+        uniqueLabels.Add label, label
+        On Error GoTo 0
+    Next i
+    
+    'Loop through unique labels and filter data
+    For j = 1 To uniqueLabels.Count
+        label = uniqueLabels(j)
+        ws.AutoFilterMode = False
+        ws.Range("B6:Q" & lastRow).AutoFilter Field:=16, Criteria1:=label
+        
+        'Create new workbook and copy filtered data
+        Set newWb = Workbooks.Add
+        Set newWs = newWb.Sheets(1)
+        ws.Range("A1:O6").Copy newWs.Range("A1")
+        ws.Range("B7:O" & lastRow).Copy newWs.Range("B7")
+        
+        'Save new workbook with label name
+        fileName = "(" & label & ") " & wb.Name
+        newWb.SaveAs fileName:=fileName
+        
+        'Close new workbook
+        newWb.Close SaveChanges:=False
+    Next j
+    
+    'Remove filter and clear AutoFilterMode
+    ws.AutoFilterMode = False
+End Sub
+
+
