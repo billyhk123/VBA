@@ -1,0 +1,22 @@
+Sub main()
+
+Worksheets("main").Activate
+ws = ThisWorkbook.Sheets("Sheet1") 
+lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+
+For i = 1 To lastRow
+
+  'Do something
+         
+Next
+'OR_________________________________________________________________________________________________
+
+Set rng = ws.Range("A1:A" & LastRow)
+
+    ' Loop through each cell in the range
+For Each cell In rng
+      ' Your code here. For example, print the cell value in the Immediate Window
+      Debug.Print cell.Value
+Next cell
+
+End Sub
