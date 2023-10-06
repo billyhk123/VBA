@@ -1,0 +1,31 @@
+Sub UpdateWorkbooks(f As String)
+
+    Dim folderPath As String
+    Dim fileName As String
+    Dim wb As Workbook
+    Dim ws As Worksheet
+    
+    ' set the folder path
+    folderPath = f
+    
+    ' get the first Excel file from the folder
+    fileName = Dir(folderPath)
+    
+    ' open the workbook
+    Set wb = Workbooks.Open(folderPath)
+        
+    ' set the worksheet
+     On Error Resume Next
+     Set ws = wb.Sheets("yourSheetHere")
+     On Error GoTo 0
+        
+     ' if the worksheet was found
+     If Not ws Is Nothing Then
+        ws.Activate
+        DoSomething
+    End If
+        
+    ' save and close the workbook
+    wb.Close SaveChanges:=True
+
+End Sub
