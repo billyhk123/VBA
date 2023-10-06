@@ -1,0 +1,96 @@
+Sub CombineWorksheets_2ndVer()
+
+    Dim ws As Worksheet
+    Dim combinedTable As Worksheet
+    Dim targetWorkbook As Workbook
+    Dim targetFilePath As Variant
+    Dim tableStartRow As Long
+    Dim tableEndRow As Long
+    Dim columnRange As Range
+    Dim column As Variant
+    Dim i As Long
+    Dim j As Long
+    Dim k As Long
+    Dim rowCount As Long
+    Dim savePath As Variant
+    Dim totalWorksheets As Long
+    Dim currentWorksheet As Long
+    Dim combinedWorkbook As Workbook
+    Dim combinedFilePath As Variant
+    
+    ' Allow the user to select the target Excel file
+    targetFilePath = Application.GetOpenFilename("Excel Files (*.xls;*.xlsx;*.xlsm),*.xls;*.xlsx;*.xlsm")
+    
+    ' Exit the sub if the user cancels the file selection
+    If targetFilePath = False Then Exit Sub
+    
+    ' Open the target workbook
+    Set targetWorkbook = Workbooks.Open(targetFilePath)
+    
+    ' Count the total number of worksheets to combine
+    totalWorksheets = targetWorkbook.Worksheets.Count - 1 ' Exclude the combined table worksheet
+    
+    ' Ask the user to select the columns to combine
+    Set columnRange = Application.InputBox("Select the columns to combine", "Column Selection", "A:P", Type:=8)
+    
+    ' Create a new workbook to store the combined table
+    Set combinedWorkbook = Workbooks.Add
+        combinedWorkbookName = combinedWorkbook.Name
+    ' Create a new worksheet to store the combined table
+    Set combinedTable = combinedWorkbook.Worksheets.Add(After:=combinedWorkbook.Worksheets(combinedWorkbook.Worksheets.Count))
+    combinedTable.Name = "Combined Table"
+    combinedTable.Cells(1, 1) = "Start"
+    
+    ' Loop through each worksheet in the target workbook
+    For Each ws In targetWorkbook.Worksheets
+        ' Skip the combined table worksheet
+        If ws.Name <> "Combined Table" Then
+            ' Find the start and end rows of the table in the current worksheet
+            tableStartRow = 1
+            tableEndRow = ws.UsedRange.Rows(ws.UsedRange.Rows.Count).Row
+            
+            ' State the worksheet name
+            
+            wbRlastRow = Workbooks(combinedWorkbookName).Worksheets("Combined Table").Cells.Find("*", LookIn:=xlFormulas, SearchOrder:=xlByRows, _
+            SearchDirection:=xlPrevious).Row
+
+            Cells(wbRlastRow + 1, 1) = ws.Name
+            Range(Cells(wbRlastRow + 1, 1), Cells(wbRlastRow + 1, 20)).Interior.Color = RGB(255, 255, 0)
+            Range(Cells(wbRlastRow + 1, 1), Cells(wbRlastRow + 1, 20)).Font.Bold = True
+
+            
+            '       paste as value in original file
+            ws.UsedRange.Copy
+            ws.UsedRange.PasteSpecial _
+            Paste:=xlPasteValues
+            ws.UsedRange.Copy combinedWorkbook.ActiveSheet.Range("A" & wbRlastRow + 2)
+        
+            '       copy to storing table
+            'combinedTable.Activate
+            'combinedTable.Rows(wbRlastRow + 2).PasteSpecial _
+            'Paste:=xlPasteValues
+            'ws.UsedRange.Copy combinedWorkbook.ActiveSheet.Rows(wbRlastRow + 2)
+            
+          
+        End If
+    Next ws
+    
+    ' Ask the user to select a path to save the combined file
+    combinedFilePath = Application.GetSaveAsFilename("Combined Table.xlsx", "Excel Files (*.xlsx), *.xlsx")
+    
+    ' Exit the sub if the user cancels the file selection
+    If combinedFilePath = False Then Exit Sub
+    
+    ' Save the combined workbook
+    combinedWorkbook.SaveAs Filename:=combinedFilePath, FileFormat:=xlOpenXMLWorkbook
+    
+    ' Close the combined workbook
+    combinedWorkbook.Close SaveChanges:=False
+    
+    ' Clear the Status Bar
+    Application.StatusBar = False
+    
+    ' Close the target workbook without saving changes
+    targetWorkbook.Close SaveChanges:=False
+End Sub
+
